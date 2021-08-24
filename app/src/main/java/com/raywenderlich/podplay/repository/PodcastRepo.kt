@@ -1,5 +1,7 @@
 package com.raywenderlich.podplay.repository
 
+import androidx.lifecycle.LiveData
+import com.raywenderlich.podplay.db.PodcastDao
 import com.raywenderlich.podplay.model.Episode
 import com.raywenderlich.podplay.model.Podcast
 import com.raywenderlich.podplay.service.RssFeedResponse
@@ -8,7 +10,7 @@ import com.raywenderlich.podplay.util.DateUtils
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-class PodcastRepo(private var feedService: RssFeedService) {
+class PodcastRepo(private var feedService: RssFeedService, private var podcastDao: PodcastDao) {
 
     var feedResponse: RssFeedResponse? = null
     fun getPodcast(feedUrl: String): Podcast? {
@@ -28,6 +30,7 @@ class PodcastRepo(private var feedService: RssFeedService) {
         return episodeResponses.map {
             Episode(
                 it.guid ?: "",
+                null,
                 it.title ?: "",
                 it.description ?: "",
                 it.url ?: "",
@@ -36,6 +39,7 @@ class PodcastRepo(private var feedService: RssFeedService) {
                 it.duration ?: ""
             )
         }
+
     }
 
     private fun rssResponseToPodcast(
@@ -47,9 +51,26 @@ class PodcastRepo(private var feedService: RssFeedService) {
         val description = if (rssResponse.description == "")
             rssResponse.summary else rssResponse.description
         // 3
-        return Podcast(feedUrl, rssResponse.title, description, imageUrl,
-            rssResponse.lastUpdated, episodes = rssItemsToEpisodes(items))
+        return Podcast(null, feedUrl, rssResponse.title, description,
+            imageUrl, rssResponse.lastUpdated,
+            episodes = rssItemsToEpisodes(items))
+
     }
 
+    fun save(podcast: Podcast) {
+        GlobalScope.launch {
+            // 1
+            val podcastId = podcastDao.insertPodcast(podcast)
+            // 2
+            for (episode in podcast.episodes) {
+                // 3
+                episode.podcastId = podcastId
+                podcastDao.insertEpisode(episode)
+            }
+        }
+    }
 
+    fun getAll(): LiveData<List<Podcast>> {
+        return podcastDao.loadPodcasts()
+    }
 }
