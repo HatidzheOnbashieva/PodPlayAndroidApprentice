@@ -32,37 +32,25 @@
  *   THE SOFTWARE.
  */
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+package com.raywenderlich.podplay.service
 
-buildscript {
+import java.util.*
 
-  ext {
-    kotlin_version = '1.4.32'
-    coroutines_version = '1.4.2'
-    retrofit_version = '2.9.0'
-    lifecycle_version = '2.3.1'
-    room_version = "2.2.6"
-  }
-
-  repositories {
-      google()
-      jcenter()
-  }
-  dependencies {
-    classpath 'com.android.tools.build:gradle:7.0.1'
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-      // NOTE: Do not place your application dependencies here; they belong
-      // in the individual module build.gradle files
-  }
-}
-
-allprojects {
-    repositories {
-        google()
-        jcenter()
-    }
-}
-
-task clean(type: Delete) {
-    delete rootProject.buildDir
+data class RssFeedResponse(
+    var title: String = "",
+    var description: String = "",
+    var summary: String = "",
+    var lastUpdated: Date = Date(),
+    var episodes: MutableList<EpisodeResponse>? = null
+) {
+  data class EpisodeResponse(
+      var title: String? = null,
+      var link: String? = null,
+      var description: String? = null,
+      var guid: String? = null,
+      var pubDate: String? = null,
+      var duration: String? = null,
+      var url: String? = null,
+      var type: String? = null
+  )
 }
